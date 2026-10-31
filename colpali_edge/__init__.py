@@ -14,6 +14,13 @@ from .loss import (
 from .pooling import hierarchical_pool
 from .quantize import binary_quantize, binary_hamming, binary_dot_approx
 from .index import MultiVectorIndex, SearchHit
+from .encoder import (
+    ColPaliEncoder,
+    EncoderUnavailableError,
+    SyntheticEncoder,
+    TransformersColPaliEncoder,
+)
+from .heatmap import AttentionMap, heatmap_payload, maxsim_attention
 
 __all__ = [
     "maxsim",
@@ -27,4 +34,11 @@ __all__ = [
     "binary_dot_approx",
     "MultiVectorIndex",
     "SearchHit",
+    "ColPaliEncoder",
+    "EncoderUnavailableError",
+    "SyntheticEncoder",
+    "TransformersColPaliEncoder",
+    "AttentionMap",
+    "heatmap_payload",
+    "maxsim_attention",
 ]

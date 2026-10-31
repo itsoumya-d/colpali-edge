@@ -34,6 +34,16 @@ class IndexTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             index.add("c", [[1.0, 0.0, 0.0]])
 
+    def test_binary_only_search_preserves_coarse_score(self):
+        index = MultiVectorIndex()
+        index.add("a", [[1.0, 0.0]])
+        index.add("b", [[-1.0, 0.0]])
+        hits = index.search_coarse([[1.0, 0.0]], top_k=2)
+        self.assertEqual(hits[0].doc_id, "a")
+        self.assertEqual(hits[0].score, float(hits[0].coarse_score))
+        self.assertEqual(hits[1].doc_id, "b")
+        self.assertGreater(hits[0].coarse_score, hits[1].coarse_score)
+
     def test_empty_index_rejects_search(self):
         with self.assertRaises(ValueError):
             MultiVectorIndex().search([[1.0]])

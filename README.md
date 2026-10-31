@@ -90,7 +90,8 @@ for hit in index.search(query, top_k=2, candidate_k=2):
 python3 -m unittest discover -s tests -v
 ```
 
-16 tests cover MaxSim, loss math, pooling, quantization, and index validation.
+25 tests cover MaxSim, loss math, pooling, quantization, index validation,
+encoder contracts, attention maps, and UI source constraints.
 
 ## Synthetic benchmark
 
@@ -111,6 +112,39 @@ These are **synthetic clustered vectors**, not vidore/esg_reports_v2,
 vidore/biomedical_lectures_v2, or `vidore/colpali_train_set`. The latency is pure
 Python; it is not a Qdrant/Ampere/WebGPU result and makes no sub-millisecond
 claim.
+
+## Index ablation
+
+```bash
+python3 benchmarks/bench_index_ablation.py
+```
+
+Synthetic clustered vectors, seed 11, 300 documents × 10 tokens × 24 dimensions,
+12 queries, `top_k=5`, `candidate_k=30`:
+
+| Method | Recall@5 | p50 | p95 |
+|---|---:|---:|---:|
+| Exhaustive FP32 MaxSim | 1.000 | 24.383 ms | 26.366 ms |
+| Binary coarse only | 1.000 | 19.941 ms | 20.758 ms |
+| Binary coarse + FP32 re-rank | 1.000 | 22.167 ms | 25.445 ms |
+
+The synthetic corpus saturates recall; this table shows the cost ordering, not a
+real-world quality gap. It is not vidore NDCG@5.
+
+## Patch heatmap UI
+
+```bash
+python3 demo/build_heatmap.py
+node demo/audit-browser.mjs
+```
+
+`demo/heatmap.html` is a self-contained, synthetic-fixture heatmap. It renders a
+6×8 patch grid, per-query MaxSim intensities, best-patch grounding, and the top
+patch scores. The Playwright audit covers 1440×900 and 390×844, asserts 44px
+targets and no overflow, and writes screenshots to `demo/artifacts/`.
+
+The page explicitly labels itself as a fixture: no encoder, PDF rasterization,
+or vidore evaluation is behind it.
 
 ## Boundaries
 

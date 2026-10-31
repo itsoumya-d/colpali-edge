@@ -78,21 +78,11 @@ class MultiVectorIndex:
             total += best
         return total
 
-    def search(
-        self,
-        query: Embedding,
-        top_k: int = 5,
-        candidate_k: int = 20,
-    ) -> list[SearchHit]:
+    def _validate_query(self, query: Embedding) -> None:
         if not self._documents:
             raise ValueError("index is empty")
         if not query:
             raise ValueError("query must not be empty")
-        if not isinstance(top_k, int) or top_k < 1:
-            raise ValueError("top_k must be a positive integer")
-        if not isinstance(candidate_k, int) or candidate_k < top_k:
-            raise ValueError("candidate_k must be at least top_k")
-
         width = len(query[0])
         if width == 0 or any(len(vector) != width for vector in query):
             raise ValueError("query vectors must share a non-zero dimension")
@@ -101,11 +91,43 @@ class MultiVectorIndex:
                 f"query dimension {width} does not match index dimension {self._dimension}"
             )
 
+    def coarse_scores(self, query: Embedding) -> list[tuple[str, int]]:
+        """All binary coarse scores, descending. Exposed for ablations."""
+        self._validate_query(query)
         coarse = [
             (doc_id, self._coarse_score(query, doc_id))
             for doc_id in self._documents
         ]
         coarse.sort(key=lambda item: (-item[1], item[0]))
+        return coarse
+
+    def search_coarse(self, query: Embedding, top_k: int = 5) -> list[SearchHit]:
+        """Binary-only search. The hit score is the coarse integer score."""
+        if not isinstance(top_k, int) or top_k < 1:
+            raise ValueError("top_k must be a positive integer")
+        coarse = self.coarse_scores(query)[:top_k]
+        return [
+            SearchHit(
+                doc_id=doc_id,
+                rank=rank,
+                score=float(score),
+                coarse_score=score,
+            )
+            for rank, (doc_id, score) in enumerate(coarse, start=1)
+        ]
+
+    def search(
+        self,
+        query: Embedding,
+        top_k: int = 5,
+        candidate_k: int = 20,
+    ) -> list[SearchHit]:
+        if not isinstance(top_k, int) or top_k < 1:
+            raise ValueError("top_k must be a positive integer")
+        if not isinstance(candidate_k, int) or candidate_k < top_k:
+            raise ValueError("candidate_k must be at least top_k")
+
+        coarse = self.coarse_scores(query)
         candidates = coarse[:min(candidate_k, len(coarse))]
 
         refined = [

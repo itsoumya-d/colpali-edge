@@ -1,0 +1,32 @@
+{
+  "kind": "synthetic-index-ablation",
+  "not_a_real_dataset": true,
+  "seed": 11,
+  "documents": 300,
+  "tokens_per_document": 10,
+  "dimension": 24,
+  "clusters": 8,
+  "queries": 12,
+  "top_k": 5,
+  "candidate_k": 30,
+  "recall_at_k": {
+    "exhaustive": 1.0,
+    "binary": 1.0,
+    "binary_rerank": 1.0
+  },
+  "latency_ms": {
+    "exhaustive": {
+      "p50": 24.383,
+      "p95": 26.366
+    },
+    "binary": {
+      "p50": 19.941,
+      "p95": 20.758
+    },
+    "binary_rerank": {
+      "p50": 22.167,
+      "p95": 25.445
+    }
+  },
+  "note": "Synthetic algorithm ablation; not vidore NDCG@5."
+}

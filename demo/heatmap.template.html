@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en" data-df-color-scale="detailed" data-df-density="compact">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>ColPali Edge — MaxSim patch grounding</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: oklch(0.17 0.012 260);
+      --panel: oklch(0.21 0.014 260);
+      --panel-2: oklch(0.25 0.016 260);
+      --line: oklch(0.34 0.018 260);
+      --line-soft: oklch(0.28 0.016 260);
+      --text: oklch(0.95 0.008 260);
+      --muted: oklch(0.72 0.018 260);
+      --faint: oklch(0.58 0.02 260);
+      --accent: oklch(0.76 0.16 155);
+      --accent-soft: oklch(0.32 0.06 155);
+      --warn: oklch(0.82 0.14 82);
+      --radius: 10px;
+      --radius-sm: 7px;
+      --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-block-size: 100dvh; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; line-height: 1.45; }
+    body { padding-block-end: env(safe-area-inset-bottom); }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2, h3 { text-wrap: balance; }
+    p { text-wrap: pretty; }
+    button { font: inherit; color: inherit; min-block-size: 44px; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .skip { position: absolute; inset-block-start: -80px; inset-inline-start: 12px; background: var(--accent); color: oklch(0.16 0.02 155); padding: 10px 14px; border-radius: var(--radius-sm); font-weight: 650; }
+    .skip:focus { inset-block-start: 12px; }
+    .topbar { position: sticky; inset-block-start: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px max(16px, env(safe-area-inset-left)) 12px max(16px, env(safe-area-inset-right)); background: var(--bg); border-block-end: 1px solid var(--line-soft); }
+    .brand { display: flex; align-items: center; gap: 10px; min-inline-size: 0; }
+    .mark { display: grid; place-items: center; inline-size: 30px; block-size: 30px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); font-family: var(--mono); font-weight: 700; font-size: 11px; }
+    .title { font-weight: 680; font-size: 14px; }
+    .sub { color: var(--muted); font-size: 12px; }
+    .badge { display: inline-flex; align-items: center; min-block-size: 22px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-family: var(--mono); font-size: 10.5px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr); gap: 14px; padding: 16px max(16px, env(safe-area-inset-right)) 32px max(16px, env(safe-area-inset-left)); max-inline-size: 1180px; margin-inline: auto; }
+    .panel { border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--panel); padding: 14px; min-inline-size: 0; }
+    .panel h2 { font-size: 14px; font-weight: 680; margin-block-end: 4px; }
+    .lead { color: var(--muted); font-size: 12px; margin-block-end: 12px; }
+    .page-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-block-end: 8px; }
+    .page-title { font-weight: 640; font-size: 12.5px; }
+    .page-note { color: var(--faint); font-size: 11px; }
+    .page-grid { display: grid; grid-template-columns: repeat(8, minmax(44px, 1fr)); gap: 4px; padding: 8px; border: 1px solid var(--line-soft); border-radius: var(--radius-sm); background: var(--bg); }
+    .patch { border: 1px solid oklch(0.3 0.02 260); border-radius: 5px; min-block-size: 44px; padding: 0; cursor: pointer; color: oklch(0.95 0.005 260); font-family: var(--mono); font-size: 9.5px; display: grid; place-items: center; transition: transform 80ms ease, border-color 80ms ease; }
+    .patch:hover { transform: translateY(-1px); border-color: var(--accent); }
+    .patch[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+    .legend { display: flex; align-items: center; gap: 8px; margin-block-start: 9px; color: var(--faint); font-size: 11px; }
+    .ramp { flex: 1; block-size: 8px; border-radius: 999px; background: linear-gradient(90deg, oklch(0.3 0.04 250), oklch(0.55 0.12 170), oklch(0.72 0.16 85), oklch(0.66 0.19 28)); }
+    .query-list { display: grid; gap: 5px; margin-block-end: 12px; }
+    .query { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: start; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--bg); padding: 0 9px; cursor: pointer; }
+    .query[aria-pressed="true"] { background: var(--accent-soft); border-color: oklch(0.45 0.08 155); }
+    .query span:last-child { color: var(--faint); font-family: var(--mono); font-size: 10.5px; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-block-end: 12px; }
+    .metric { border: 1px solid var(--line-soft); border-radius: 6px; background: var(--bg); padding: 8px 9px; }
+    .metric dt { color: var(--faint); font-size: 10.5px; }
+    .metric dd { margin: 0; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+    .hits { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+    .hit { display: flex; justify-content: space-between; gap: 10px; border: 1px solid var(--line-soft); border-radius: 5px; background: var(--bg); padding: 6px 8px; font-family: var(--mono); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .hit span:last-child { color: var(--muted); }
+    .notice { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel-2); padding: 9px 10px; color: var(--muted); font-size: 12px; }
+    .status { display: flex; gap: 8px; align-items: flex-start; margin-block-start: 10px; color: var(--accent); font-weight: 620; font-size: 12px; }
+    .dot { inline-size: 8px; block-size: 8px; margin-block-start: 5px; border-radius: 50%; background: var(--accent); flex: none; }
+    .status-detail { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; margin-block-start: 2px; }
+    .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) { .page-grid { grid-template-columns: repeat(6, minmax(44px, 1fr)); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to heatmap</a>
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">CE</div>
+      <div><div class="title">ColPali Edge</div><div class="sub">MaxSim patch grounding</div></div>
+      <span class="badge">synthetic fixture</span>
+    </div>
+    <a class="badge" href="../README.md">Docs</a>
+  </header>
+
+  <main id="main" class="layout">
+    <section class="panel" aria-labelledby="page-title">
+      <h2 id="page-title">Document patches</h2>
+      <p class="lead">Select a query token, then inspect which page patches it matches. Cell intensity is min-max normalized MaxSim similarity.</p>
+      <div class="page-head">
+        <span id="doc-title" class="page-title"></span>
+        <span id="doc-note" class="page-note"></span>
+      </div>
+      <div id="grid" class="page-grid" role="group" aria-label="Document patch heatmap"></div>
+      <div class="legend"><span>low</span><div class="ramp" aria-hidden="true"></div><span>high</span></div>
+      <p id="status" class="status" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span>Ready.<span class="status-detail">This page and its scores are generated fixtures, not a real PDF or model output.</span></span></p>
+    </section>
+
+    <aside class="panel" aria-labelledby="query-title">
+      <h2 id="query-title">Query tokens</h2>
+      <p class="lead">Each token takes its best patch match; the page score is the sum of those maxima.</p>
+      <div id="queries" class="query-list" role="group" aria-label="Query tokens"></div>
+      <dl class="metrics">
+        <div class="metric"><dt>Best patch</dt><dd id="best-patch">—</dd></div>
+        <div class="metric"><dt>Best score</dt><dd id="best-score">—</dd></div>
+        <div class="metric"><dt>Query index</dt><dd id="query-index">—</dd></div>
+        <div class="metric"><dt>Patches</dt><dd id="patch-count">—</dd></div>
+      </dl>
+      <h3 style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-block-end:6px">Top patch scores</h3>
+      <ol id="hits" class="hits"></ol>
+      <div class="notice" style="margin-block-start:12px">
+        <strong>Boundary.</strong> No PaliGemma/ColQwen2 encoder, PDF rasterization, or vidore benchmark is used here. This UI consumes the deterministic heatmap payload produced by <code>demo/build_heatmap.py</code>.
+      </div>
+    </aside>
+  </main>
+
+  <script type="application/json" id="heatmap-data">__HEATMAP_DATA__</script>
+  <script>
+    const DATA = JSON.parse(document.getElementById("heatmap-data").textContent);
+    const grid = document.getElementById("grid");
+    const queries = document.getElementById("queries");
+    const hits = document.getElementById("hits");
+    const bestPatch = document.getElementById("best-patch");
+    const bestScore = document.getElementById("best-score");
+    const queryIndex = document.getElementById("query-index");
+    const patchCount = document.getElementById("patch-count");
+    const status = document.getElementById("status");
+    const selected = { query: 0, patch: null };
+
+    document.getElementById("doc-title").textContent = DATA.page.title;
+    document.getElementById("doc-note").textContent = DATA.page.note;
+    patchCount.textContent = String(DATA.patch_labels.length);
+
+    function colorFor(value) {
+      const lightness = 30 + value * 42;
+      const chroma = 0.03 + value * 0.13;
+      const hue = 250 - value * 220;
+      return `oklch(${lightness}% ${chroma} ${hue})`;
+    }
+
+    function renderQueries() {
+      queries.innerHTML = DATA.rows.map((row, index) => `
+        <button class="query" type="button" data-query="${index}" aria-pressed="${index === selected.query}">
+          <span>${escapeHtml(row.query)}</span>
+          <span>${escapeHtml(DATA.patch_labels[row.best_patch])} · ${row.best_score.toFixed(3)}</span>
+        </button>
+      `).join("");
+      [...queries.querySelectorAll("[data-query]")].forEach((button) => {
+        button.addEventListener("click", () => {
+          selected.query = Number(button.dataset.query);
+          selected.patch = null;
+          render();
+        });
+      });
+    }
+
+    function renderGrid() {
+      const row = DATA.rows[selected.query];
+      grid.innerHTML = DATA.patch_labels.map((label, index) => {
+        const value = row.normalized[index];
+        return `<button class="patch" type="button" data-patch="${index}" aria-pressed="${selected.patch === index}" aria-label="${escapeHtml(label)} similarity ${row.scores[index].toFixed(3)}" style="background:${colorFor(value)}">${escapeHtml(label)}</button>`;
+      }).join("");
+      [...grid.querySelectorAll("[data-patch]")].forEach((button) => {
+        button.addEventListener("click", () => {
+          selected.patch = Number(button.dataset.patch);
+          render();
+        });
+      });
+    }
+
+    function renderDetails() {
+      const row = DATA.rows[selected.query];
+      bestPatch.textContent = DATA.patch_labels[row.best_patch];
+      bestScore.textContent = row.best_score.toFixed(4);
+      queryIndex.textContent = `${selected.query + 1} / ${DATA.rows.length}`;
+      const ranked = row.scores
+        .map((score, index) => ({ score, index }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+      hits.innerHTML = ranked.map((hit) => `
+        <li class="hit"><span>${escapeHtml(DATA.patch_labels[hit.index])}</span><span class="mono">${hit.score.toFixed(4)}</span></li>
+      `).join("");
+      const target = selected.patch === null ? row.best_patch : selected.patch;
+      status.querySelector("span:last-child").firstChild.textContent =
+        selected.patch === null ? "Best patch highlighted." : "Patch selected.";
+      status.querySelector(".status-detail").textContent =
+        `${DATA.patch_labels[target]} · query "${row.query}" · score ${row.scores[target].toFixed(4)}. Fixture data, not model output.`;
+    }
+
+    function render() {
+      renderQueries();
+      renderGrid();
+      renderDetails();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+    }
+
+    render();
+  </script>
+</body>
+</html>

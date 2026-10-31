@@ -1,0 +1,20 @@
+{
+  "kind": "synthetic-clustered-vectors",
+  "not_a_real_dataset": true,
+  "seed": 7,
+  "documents": 500,
+  "tokens_per_document": 12,
+  "dimension": 32,
+  "clusters": 10,
+  "queries": 20,
+  "top_k": 5,
+  "candidate_k": 50,
+  "recall_at_k": 1.0,
+  "latency_ms": {
+    "p50": 66.531,
+    "p95": 130.35,
+    "min": 57.27,
+    "max": 149.601
+  },
+  "note": "Algorithm-core benchmark only; not ColPali/vidore NDCG@5."
+}
